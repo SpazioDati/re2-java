@@ -1,5 +1,6 @@
 *.re2*
 *.iml
+.idea
 obj/
 re2*
 target/
