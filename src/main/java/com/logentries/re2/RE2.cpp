@@ -242,23 +242,27 @@ JNIEXPORT jboolean JNICALL Java_com_logentries_re2_RE2_partialMatchImpl__Ljava_l
 }
 
 JNIEXPORT jobject JNICALL Java_com_logentries_re2_RE2_getCaptureGroupNamesImpl
-  (JNIEnv *env, jclass cls, jlong j_pointer, jobjectArray j_args) {
+  (JNIEnv *env, jclass cls, jlong j_pointer) {
     RE2 *pointer = reinterpret_cast<RE2*>(j_pointer);
 
-    jclass j_array_list = env->FindClass("java/util/ArrayList");
-    if (j_array_list == NULL) return NULL;
+    jclass j_hashmap_class = env->FindClass("java/util/HashMap");
+    if (j_hashmap_class == NULL) return NULL;
 
-    jmethodID arrayListCtor = env->GetMethodID(j_array_list, "<init>", "()V");
-    jmethodID add = env->GetMethodID(j_array_list, "add", "(Ljava/lang/Object;)Z");
-    jobject java_array_list = env->NewObject(j_array_list, arrayListCtor);
+    jmethodID hashMapCtor = env->GetMethodID(j_hashmap_class, "<init>", "()V");
+    jmethodID put_method = env->GetMethodID(j_hashmap_class, "put", "(Ljava/lang/Object;Ljava/lang/Object;)V");
+    jobject java_map = env->NewObject(j_hashmap_class, hashMapCtor);
+    
+    jclass j_int_class = env->FindClass("java/lang/Integer");
+    jmethodID newInt = env->GetMethodID(j_int_class, "valueOf", "(I)Ljava/lang/Integer;");
 
     map<int, string> groupNames = (pointer->CapturingGroupNames());
     map<int, string>::iterator it;
 
     for (it = groupNames.begin(); it != groupNames.end(); ++it) {
 		jstring jvalue = env->NewStringUTF(it->second.c_str());
+		jobject jkey = env->CallStaticObjectMethod(j_int_class, newInt, it->first)
 
-		env->CallObjectMethod(java_array_list, add, jvalue);
+		env->CallObjectMethod(java_map, put_method, jkey, jvalue);
     };
 
     return java_array_list;
