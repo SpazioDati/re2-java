@@ -25,6 +25,7 @@ public final class RE2 extends LibraryLoader implements AutoCloseable {
     private static native int numberOfCapturingGroupsImpl(final long pointer);
 
     private long pointer;
+    private boolean unicodeWord = false;
 
     private void checkState() throws IllegalStateException {
         if (pointer == 0) {
@@ -37,11 +38,13 @@ public final class RE2 extends LibraryLoader implements AutoCloseable {
 
     public RE2(final String pattern, final Options options) throws RegExprException {
         pointer = compileImpl(pattern, options);
+        unicodeWord = options.isUnicodeWord();
     }
     public RE2(final String pattern, final Options.Flag... options) throws RegExprException {
         Options opt = new Options();
         for (Options.Flag f : options) f.apply(opt);
         pointer = compileImpl(pattern, opt);
+        unicodeWord = opt.isUnicodeWord();
     }
 
     public static RE2 compile(final String pattern, final Options.Flag... options) {
@@ -141,14 +144,14 @@ public final class RE2 extends LibraryLoader implements AutoCloseable {
     }
     public RE2Matcher matcher(final CharSequence str, boolean fetchGroups) {
         checkState();
-        return new RE2Matcher(str, this, pointer, fetchGroups);
+        return new RE2Matcher(str, this, pointer, fetchGroups, unicodeWord);
     }
     public RE2Matcher matcher(final RE2String str) {
         return matcher(str, true);
     }
     public RE2Matcher matcher(final RE2String str, boolean fetchGroups) {
         checkState();
-        return new RE2Matcher(str, this, pointer, fetchGroups);
+        return new RE2Matcher(str, this, pointer, fetchGroups, unicodeWord);
     }
 
     /**

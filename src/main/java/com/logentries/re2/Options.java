@@ -20,6 +20,7 @@ public final class Options extends LibraryLoader {
     private boolean perlClasses;
     private boolean wordBoundary;
     private boolean oneLine;
+    private boolean unicodeWord = false;
 
     private native void setDefaults();
 
@@ -78,6 +79,14 @@ public final class Options extends LibraryLoader {
     public Options setOneLine(final boolean oneLine) {
         this.oneLine = oneLine;
         return this;
+    }
+    public Options setUnicodeWord(final boolean unicodeWord){
+        this.unicodeWord = unicodeWord;
+        return this;
+    }
+    
+    public boolean isUnicodeWord(){
+        return unicodeWord;
     }
 
     /// FLAGS
@@ -175,6 +184,16 @@ public final class Options extends LibraryLoader {
             }
         };
     }
+    public static final Flag UNICODE_WORD = UNICODE_WORD(true);
+    public static Flag UNICODE_WORD(final boolean v) {
+        return new Flag() {
+            @Override
+            public void apply(Options opt) {
+                opt.setUnicodeWord(v);
+            }
+        };
+    }
+
     public static final Flag ONE_LINE = ONE_LINE (true);
 	public static Flag ONE_LINE(final boolean v) {
         return new Flag() {

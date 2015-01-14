@@ -42,8 +42,9 @@ public class RE2Matcher implements MatchResult, AutoCloseable, Iterable<MatchRes
     protected RE2 regex;
     private boolean matched;
     private boolean fetchGroups;
+    private boolean unicodeWord;
 
-    RE2Matcher(RE2String input, RE2 regex, long re2Pointer, boolean fetchGroups) {
+    RE2Matcher(RE2String input, RE2 regex, long re2Pointer, boolean fetchGroups, boolean unicodeWord) {
         this.utf8input = input;
         this.matched = false;
         this.groups = new ArrayList<>(fetchGroups? regex.numberOfCapturingGroups() + 1 : 1);
@@ -51,13 +52,13 @@ public class RE2Matcher implements MatchResult, AutoCloseable, Iterable<MatchRes
         this.regex = regex; //to avoid that re2Pointer could be garbaged
         this.fetchGroups = fetchGroups;
         this.managedString = null;
+        this.unicodeWord = unicodeWord;
     }
 
 
-    RE2Matcher(CharSequence input, RE2 regex, long re2Pointer, boolean fetchGroups) {
-        this(new RE2String(input), regex, re2Pointer, fetchGroups);
+    RE2Matcher(CharSequence input, RE2 regex, long re2Pointer, boolean fetchGroups, boolean unicodeWord) {
+        this(new RE2String(input), regex, re2Pointer, fetchGroups, unicodeWord);
         this.managedString = utf8input;
-
     }
     public void close() {
         if (managedString != null)
