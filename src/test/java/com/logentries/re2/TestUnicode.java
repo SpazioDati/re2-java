@@ -1,10 +1,11 @@
 package com.logentries.re2;
 
-import junit.framework.Assert;
 import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import static org.junit.Assert.*;
 
 /**
  * Created by edt on 1/15/15.
@@ -24,7 +25,27 @@ public class TestUnicode {
 
         for ( String s : cases.keySet() ) {
             RE2 re = RE2.compile(s);
-            Assert.assertEquals(cases.get(s), re.patchUnicodeWord(s));
+            assertEquals(cases.get(s), re.patchUnicodeWord(s));
         }
+    }
+
+    @Test
+    public void testIgnoreMiddle() throws Exception {
+        RE2 regex = new RE2("(\\w+)\\basd\\b(\\w+)", Options.UNICODE_WORD);
+        RE2Matcher matcher = regex.matcher("éé asd éé");
+        assertTrue(matcher.findNext());
+        assertEquals("éé asd éé", matcher.group());
+        assertEquals("éé", matcher.group(1));
+        assertEquals("éé", matcher.group(2));
+
+        matcher = regex.matcher("ééasdéé");
+        assertFalse(matcher.findNext());
+    }
+
+    public void testIgnoreEnd() throws Exception {
+        RE2 regex = new RE2("((\\w+)\\b)", Options.UNICODE_WORD);
+        RE2Matcher matcher = regex.matcher("éaéa");
+        assertTrue(matcher.findNext());
+        assertEquals("éaéa", matcher.group());
     }
 }

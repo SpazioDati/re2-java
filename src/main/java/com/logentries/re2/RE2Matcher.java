@@ -16,7 +16,7 @@ public class RE2Matcher implements MatchResult, AutoCloseable, Iterable<MatchRes
         final int end
     );
 
-    static class Range {
+    public static class Range {
         int start, end;
         static Range of(int start, int end) {
             Range r = new Range();

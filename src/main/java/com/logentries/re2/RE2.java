@@ -10,10 +10,7 @@ package com.logentries.re2;
 import com.logentries.re2.entity.CaptureGroup;
 import com.logentries.re2.entity.NamedGroup;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.MatchResult;
 
 public final class RE2 extends LibraryLoader implements AutoCloseable {
@@ -28,7 +25,7 @@ public final class RE2 extends LibraryLoader implements AutoCloseable {
     
     private long pointer;
     private boolean changedGroups = false;
-    private Map<Integer, Integer> originalGroupMap = null;
+    //private Map<Integer, Integer> originalGroupMap = null;
 
     private void checkState() throws IllegalStateException {
         if (pointer == 0) {
@@ -42,14 +39,14 @@ public final class RE2 extends LibraryLoader implements AutoCloseable {
     public RE2(String pattern, final Options options) throws RegExprException {
         if (options.isUnicodeWord()) pattern = patchUnicodeWord(pattern);
         pointer = compileImpl(pattern, options);
-        if (changedGroups) mapPatchedGroups();
+        //if (changedGroups) mapPatchedGroups();
     }
     public RE2(String pattern, final Options.Flag... options) throws RegExprException {
         Options opt = new Options();
         for (Options.Flag f : options) f.apply(opt);
         if (opt.isUnicodeWord()) pattern = patchUnicodeWord(pattern);
         pointer = compileImpl(pattern, opt);
-        if (changedGroups) mapPatchedGroups();
+        //if (changedGroups) mapPatchedGroups();
 
     }
 
@@ -103,7 +100,7 @@ public final class RE2 extends LibraryLoader implements AutoCloseable {
         }
         return buffer.toString();
     }
-    private void mapPatchedGroups() {
+    /*private void mapPatchedGroups() {
         HashMap<Integer, String> groups = getCaptureGroupNameMap();
         int total = numberOfCapturingGroups();
         int offset = 0;
@@ -123,6 +120,22 @@ public final class RE2 extends LibraryLoader implements AutoCloseable {
     
     Map<Integer, Integer> getOriginalGroupMap() {
         return originalGroupMap;
+    }*/
+
+    Set<Integer> getIgnoreGropus ( ) {
+        HashMap<Integer, String> groups = getCaptureGroupNameMap();
+        int total = numberOfCapturingGroups();
+        int offset = 0;
+        int originalgroup = 1;
+
+        Set<Integer> output = new HashSet<>();
+
+        for (int i = 1; i<total; i++){
+            if (groups.containsKey(i) && groups.get(i).startsWith(WORD_BOUNDARY_GNAME))
+                output.add(i);
+        }
+
+        return output;
     }
     
     

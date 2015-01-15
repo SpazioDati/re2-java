@@ -249,18 +249,18 @@ JNIEXPORT jobject JNICALL Java_com_logentries_re2_RE2_getCaptureGroupNamesImpl
     if (j_hashmap_class == NULL) return NULL;
 
     jmethodID hashMapCtor = env->GetMethodID(j_hashmap_class, "<init>", "()V");
-    jmethodID put_method = env->GetMethodID(j_hashmap_class, "put", "(Ljava/lang/Object;Ljava/lang/Object;)V");
+    jmethodID put_method = env->GetMethodID(j_hashmap_class, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
     jobject java_map = env->NewObject(j_hashmap_class, hashMapCtor);
     
     jclass j_int_class = env->FindClass("java/lang/Integer");
-    jmethodID newInt = env->GetMethodID(j_int_class, "valueOf", "(I)Ljava/lang/Integer;");
+    jmethodID newInt = env->GetStaticMethodID(j_int_class, "valueOf", "(I)Ljava/lang/Integer;");
 
     map<int, string> groupNames = (pointer->CapturingGroupNames());
     map<int, string>::iterator it;
 
     for (it = groupNames.begin(); it != groupNames.end(); ++it) {
 		jstring jvalue = env->NewStringUTF(it->second.c_str());
-		jobject jkey = env->CallStaticObjectMethod(j_int_class, newInt, it->first);
+		jobject jkey = env->CallStaticObjectMethod(j_int_class, newInt, (jint) it->first);
 
 		env->CallObjectMethod(java_map, put_method, jkey, jvalue);
     };
