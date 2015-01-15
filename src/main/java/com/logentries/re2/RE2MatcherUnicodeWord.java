@@ -17,6 +17,16 @@ public class RE2MatcherUnicodeWord extends RE2Matcher {
 
     public boolean find(int start, int end) {
         boolean result = super.find(start, end);
+
+        Set<Integer> ignore = regex.getIgnoreGropus();
+        for ( int i = 0; i < groupCount(); ++i ) {
+            if ( !ignore.contains(i) )
+                System.out.println("Good:   '" + group(i) + "'");
+            else
+                System.out.println("Ignored: '" + group(i) + "'");
+        }
+
+
         groups = patchGroups(groups, regex.getIgnoreGropus());
 
         return result;
@@ -35,6 +45,9 @@ public class RE2MatcherUnicodeWord extends RE2Matcher {
         for ( int i = 0; i < patched.size(); ++i ) {
             for ( int j : ignoreRanges ) {
                 Range ri = patched.get(i);
+                boolean empty = groups.get(j).start == groups.get(j).end;
+                if ( empty || groups.get(j).start < 0 ) continue;
+
 
                 // the match if exist is one character
                 if ( groups.get(j).start == ri.start )

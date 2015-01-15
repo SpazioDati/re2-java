@@ -14,6 +14,7 @@ import java.util.*;
 import java.util.regex.MatchResult;
 
 public final class RE2 extends LibraryLoader implements AutoCloseable {
+
     private static native long compileImpl(final String pattern, final Options options) throws RegExprException;
     private static native void releaseImpl(final long pointer);
     private static native boolean fullMatchImpl(final String str, final long pointer, Object ... args);
@@ -22,7 +23,8 @@ public final class RE2 extends LibraryLoader implements AutoCloseable {
     private static native boolean partialMatchImpl(final String str, final String pattern, Object ... args);
     private static native HashMap<Integer, String> getCaptureGroupNamesImpl(final long pointer);
     private static native int numberOfCapturingGroupsImpl(final long pointer);
-    
+
+
     private long pointer;
     private boolean changedGroups = false;
     //private Map<Integer, Integer> originalGroupMap = null;
@@ -54,14 +56,17 @@ public final class RE2 extends LibraryLoader implements AutoCloseable {
     /* Unicode word patch */
     static final int IDLE = 0, QUOTING = 2;
     static final String WORD_BOUNDARY_GNAME = "_ignore_";
-    
+    static final String BOUNDARY_REPLACE = "(\\z|\\A|[^\\pL\\pN])";
+    static final String WORD_REPLACE = "[\\pL\\pN]";
+    static final String NON_WORD_REPLACE = "[^\\pL\\pN]";
+
     String patchUnicodeWord(String original) {
         StringBuilder buffer = new StringBuilder(original.length());
         int state = IDLE;
         int wordBoundaryCount = 0;
         for (int i=0; i<original.length(); i++) {
             char c = original.charAt(i);
-            char next = 0; 
+            char next = 0;
             if (i<original.length()-1) next = original.charAt(i+1);
             switch (state) {
                 case IDLE:
@@ -70,14 +75,14 @@ public final class RE2 extends LibraryLoader implements AutoCloseable {
                             buffer.append("\\Q");
                             state = QUOTING;
                         } else if ( next == 'w') {
-                            buffer.append("[\\pL\\pN]");
+                            buffer.append(WORD_REPLACE);
                         } else if ( next == 'W') {
-                            buffer.append("[^\\pL\\pN]");
+                            buffer.append(NON_WORD_REPLACE);
                         } else if ( next == 'b') {
                             buffer.append("(?P<")
                                     .append(WORD_BOUNDARY_GNAME)
                                     .append(wordBoundaryCount)
-                                    .append(">\\PL)");
+                                    .append(">" + BOUNDARY_REPLACE + ")");
                             wordBoundaryCount++;
                             changedGroups = true;
                         } else {
@@ -93,34 +98,14 @@ public final class RE2 extends LibraryLoader implements AutoCloseable {
                         state = IDLE;
                         buffer.append("\\E");
                         i++;
-                    } else 
+                    } else
                         buffer.append(c);
                     break;
             }
         }
+        System.out.println(buffer.toString());
         return buffer.toString();
     }
-    /*private void mapPatchedGroups() {
-        HashMap<Integer, String> groups = getCaptureGroupNameMap();
-        int total = numberOfCapturingGroups();
-        int offset = 0;
-        int originalgroup = 1;
-        
-        originalGroupMap = new HashMap<>();
-        
-        for (int i = 1; i<total; i++){
-            if (groups.containsKey(i) && groups.get(i).startsWith(WORD_BOUNDARY_GNAME)) {
-                offset++;
-            } else {
-                originalGroupMap.put(originalgroup, originalgroup+offset);
-                originalgroup++;
-            }
-        }
-    }
-    
-    Map<Integer, Integer> getOriginalGroupMap() {
-        return originalGroupMap;
-    }*/
 
     Set<Integer> getIgnoreGropus ( ) {
         HashMap<Integer, String> groups = getCaptureGroupNameMap();
@@ -137,12 +122,12 @@ public final class RE2 extends LibraryLoader implements AutoCloseable {
 
         return output;
     }
-    
-    
+
+
     ////////////////////////////////////////////////////////////////////////////////////
 
-    
-    
+
+
     public static RE2 compile(final String pattern, final Options.Flag... options) {
         try {
             return new RE2(pattern, options);
@@ -160,7 +145,7 @@ public final class RE2 extends LibraryLoader implements AutoCloseable {
         checkState();
         return getCaptureGroupNamesImpl(pointer);
     }
-    
+
     public void dispoze() {
         if (pointer != 0) {
             releaseImpl(pointer);
@@ -240,7 +225,7 @@ public final class RE2 extends LibraryLoader implements AutoCloseable {
         HashMap<Integer, String> nameMap = getCaptureGroupNamesImpl(pointer);
         return new ArrayList<>(nameMap.values());
     }
-    
+
 
     public RE2Matcher matcher(final CharSequence str) {
         return matcher(str, true);
