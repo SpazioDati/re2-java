@@ -1,8 +1,5 @@
-package com.logentries.re2_test;
+package com.logentries.re2;
 
-import com.logentries.re2.UTF8CharOffset;
-import org.hamcrest.CoreMatchers;
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;

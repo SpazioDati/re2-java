@@ -1,6 +1,5 @@
-package com.logentries.re2_test;
+package com.logentries.re2;
 
-import com.logentries.re2.*;
 import com.logentries.re2.entity.NamedGroup;
 import org.junit.Assert;
 import org.junit.Test;

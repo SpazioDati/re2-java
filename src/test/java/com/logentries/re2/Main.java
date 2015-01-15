@@ -1,4 +1,4 @@
-package com.logentries.re2_test;
+package com.logentries.re2;
 
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;

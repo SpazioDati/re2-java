@@ -260,12 +260,12 @@ JNIEXPORT jobject JNICALL Java_com_logentries_re2_RE2_getCaptureGroupNamesImpl
 
     for (it = groupNames.begin(); it != groupNames.end(); ++it) {
 		jstring jvalue = env->NewStringUTF(it->second.c_str());
-		jobject jkey = env->CallStaticObjectMethod(j_int_class, newInt, it->first)
+		jobject jkey = env->CallStaticObjectMethod(j_int_class, newInt, it->first);
 
 		env->CallObjectMethod(java_map, put_method, jkey, jvalue);
     };
 
-    return java_array_list;
+    return java_map;
 }
 
 JNIEXPORT jint JNICALL Java_com_logentries_re2_RE2_numberOfCapturingGroupsImpl

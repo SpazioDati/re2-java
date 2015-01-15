@@ -1,4 +1,4 @@
-package com.logentries.re2_test;
+package com.logentries.re2;
 
 import java.util.List;
 import java.util.Arrays;

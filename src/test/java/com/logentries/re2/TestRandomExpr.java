@@ -1,7 +1,5 @@
-package com.logentries.re2_test;
+package com.logentries.re2;
 
-import com.logentries.re2.RE2;
-import com.logentries.re2.RegExprException;
 import org.junit.Test;
 
 import java.util.Arrays;

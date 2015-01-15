@@ -58,7 +58,7 @@ public final class RE2 extends LibraryLoader implements AutoCloseable {
     static final int IDLE = 0, QUOTING = 2;
     static final String WORD_BOUNDARY_GNAME = "_ignore_";
     
-    private String patchUnicodeWord(String original) {
+    String patchUnicodeWord(String original) {
         StringBuilder buffer = new StringBuilder(original.length());
         int state = IDLE;
         int wordBoundaryCount = 0;
@@ -73,9 +73,9 @@ public final class RE2 extends LibraryLoader implements AutoCloseable {
                             buffer.append("\\Q");
                             state = QUOTING;
                         } else if ( next == 'w') {
-                            buffer.append("[\\pL\\d]");
+                            buffer.append("[\\pL\\pN]");
                         } else if ( next == 'W') {
-                            buffer.append("[^\\pL\\d]");
+                            buffer.append("[^\\pL\\pN]");
                         } else if ( next == 'b') {
                             buffer.append("(?P<")
                                     .append(WORD_BOUNDARY_GNAME)

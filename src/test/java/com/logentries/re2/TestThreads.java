@@ -1,4 +1,4 @@
-package com.logentries.re2_test;
+package com.logentries.re2;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -6,9 +6,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
-import com.logentries.re2.RE2;
-import com.logentries.re2.Options;
-import com.logentries.re2.RegExprException;
 
 public class TestThreads {
     private RE2 safeNewRE2(final String regExprStr, final Options options) {
