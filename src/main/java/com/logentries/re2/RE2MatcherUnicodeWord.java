@@ -17,19 +17,19 @@ public class RE2MatcherUnicodeWord extends RE2Matcher {
 
     public boolean find(int start, int end) {
         boolean result = super.find(start, end);
+        if ( !result ) return false;
 
-        Set<Integer> ignore = regex.getIgnoreGropus();
+        /*Set<Integer> ignore = regex.getIgnoreGropus();
         for ( int i = 0; i < groupCount(); ++i ) {
             if ( !ignore.contains(i) )
                 System.out.println("Good:   '" + group(i) + "'");
             else
                 System.out.println("Ignored: '" + group(i) + "'");
-        }
-
+        }*/
 
         groups = patchGroups(groups, regex.getIgnoreGropus());
 
-        return result;
+        return true;
     }
 
     static ArrayList<Range> patchGroups(ArrayList<Range> groups, Set<Integer> ignoreRanges) {

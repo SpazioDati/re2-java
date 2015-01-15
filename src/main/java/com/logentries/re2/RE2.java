@@ -56,9 +56,21 @@ public final class RE2 extends LibraryLoader implements AutoCloseable {
     /* Unicode word patch */
     static final int IDLE = 0, QUOTING = 2;
     static final String WORD_BOUNDARY_GNAME = "_ignore_";
-    static final String BOUNDARY_REPLACE = "(\\z|\\A|[^\\pL\\pN])";
+    static final String[] BOUNDARY_REPLACE = {"\\z", "\\A", "[^\\pL\\pN]"};
     static final String WORD_REPLACE = "[\\pL\\pN]";
     static final String NON_WORD_REPLACE = "[^\\pL\\pN]";
+
+    static String getWordBoundaryReplace ( int index ) {
+        String output = "(?P<" + WORD_BOUNDARY_GNAME + index + ">";
+        ++index;
+
+        for ( String s : BOUNDARY_REPLACE ) {
+            output += "(?P<" + WORD_BOUNDARY_GNAME + index + ">" + s + ")" + "|";
+            ++index;
+        }
+
+        return output.subSequence(0, output.length() - 1) + ")";
+    }
 
     String patchUnicodeWord(String original) {
         StringBuilder buffer = new StringBuilder(original.length());
@@ -79,11 +91,8 @@ public final class RE2 extends LibraryLoader implements AutoCloseable {
                         } else if ( next == 'W') {
                             buffer.append(NON_WORD_REPLACE);
                         } else if ( next == 'b') {
-                            buffer.append("(?P<")
-                                    .append(WORD_BOUNDARY_GNAME)
-                                    .append(wordBoundaryCount)
-                                    .append(">" + BOUNDARY_REPLACE + ")");
-                            wordBoundaryCount++;
+                            buffer.append(getWordBoundaryReplace(wordBoundaryCount));
+                            wordBoundaryCount += 4;
                             changedGroups = true;
                         } else {
                             buffer.append(c).append(next);
@@ -103,7 +112,7 @@ public final class RE2 extends LibraryLoader implements AutoCloseable {
                     break;
             }
         }
-        System.out.println(buffer.toString());
+
         return buffer.toString();
     }
 
