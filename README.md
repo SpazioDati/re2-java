@@ -58,7 +58,7 @@ startup, saved into temporary files and dynamically loaded into the address spac
 
 
 #### v1.3
-  - added option `UNICODE_WORD` to transparently handle unicode words and word boundaries. Take a look a the section below.
+  - added option `UNICODE_WORD` to transparently handle unicode words and word boundaries. Take a look at the section below.
 
 #### v1.2
 
