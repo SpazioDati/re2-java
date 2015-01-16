@@ -34,25 +34,35 @@ public class RE2MatcherUnicodeWord extends RE2Matcher {
 
     static ArrayList<Range> patchGroups(ArrayList<Range> groups, Set<Integer> ignoreRanges) {
         ArrayList<Range> patched = new ArrayList<>();
+        Set<Integer> startRanges = new HashSet<>();
 
         // remove the groups to ignore
         for ( int i = 0; i < groups.size(); ++i ) {
             if ( !ignoreRanges.contains(i) )
                 patched.add(groups.get(i));
+            else {
+                Range ri = groups.get(i);
+                if ( ri.start >= 0 && ri.start != ri.end ) {
+                    //System.out.println(ri.start);
+                    startRanges.add(ri.start);
+                }
+            }
+
         }
 
         // adjust the ranges of the remaining ones
         for ( int i = 0; i < patched.size(); ++i ) {
-            for ( int j : ignoreRanges ) {
-                Range ri = patched.get(i);
-                boolean empty = groups.get(j).start == groups.get(j).end;
-                if ( empty || groups.get(j).start < 0 ) continue;
+            Range ri = patched.get(i);
 
+            if ( ri.start != ri.end && ri.start >= 0 ) {
 
-                // the match if exist is one character
-                if ( groups.get(j).start == ri.start )
+                if (startRanges.contains(ri.start))
                     patched.set(i, Range.of(ri.start + 1, ri.end));
-                if ( groups.get(j).end == ri.end )
+
+                // eventually I just modified the range!
+                ri = patched.get(i);
+
+                if (startRanges.contains(ri.end - 1))
                     patched.set(i, Range.of(ri.start, ri.end - 1));
             }
         }

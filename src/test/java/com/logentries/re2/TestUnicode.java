@@ -18,10 +18,10 @@ public class TestUnicode {
     public void testReplace ( ) {
         Map<String, String> cases = new HashMap<String, String>() {{
             put("", "");
-            put("\\b", RE2.getWordBoundaryReplace(0));
+            put("\\b", RE2.BOUNDARY_REPLACE);
             put("\\w", RE2.WORD_REPLACE);
             put("\\W", RE2.NON_WORD_REPLACE);
-            put("\\b\\b", RE2.getWordBoundaryReplace(0) + RE2.getWordBoundaryReplace(4));
+            put("\\b\\b", RE2.BOUNDARY_REPLACE + RE2.BOUNDARY_REPLACE);
         }};
 
         for ( String s : cases.keySet() ) {
