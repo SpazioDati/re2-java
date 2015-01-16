@@ -56,6 +56,10 @@ startup, saved into temporary files and dynamically loaded into the address spac
 
 ### Changelog ###
 
+
+#### v1.3
+  - added option `UNICODE_WORD` to transparently handle unicode words and word boundaries. Take a look a the section below.
+
 #### v1.2
 
   - added `RE2.compile` static method, similar to `Pattern.compile`. The main difference with the `RE2` constructor
@@ -262,3 +266,12 @@ or equivalently:
         );
 
  see `Options` static fields for further details.
+
+
+### Unicode words and word boundaries ###
+
+`RE2` natively supports unicode words (with special character classes like `\pN` and `\pL`) but it does not support unicode word boundaries (`\b`), because it is implemented with a single byte lookahead. Even using multiple bytes as lookahead the resulting automata would be huge and more difficult to handle.
+
+What we did from version 1.3 is to transparently handle some of these cases, that we think are the most meaningful in a real world scenario. This behavior is enabled through the option `UNICODE_WORD` and works by replacing words and boundary classes with named groups that are then removed in the output. While there is no problem replacing `\w` and `\W`, there are some problems with `\b`. The replacement makes sense in cases where the `\b` is used "properly", i.e. without repetitions or non-word characters close to it. In these extreme cases what we do is actually changing the semantics of the regular expression, therefore we may produce false matches or missing some of them (with respect to the original expression).
+
+Anyway this patch works OK in the majority of "normal" cases of usage of `\b`. Without using the option, the regex `\bball\b` would match "ball" in the text "Fußball" (because "ß" is a non-word in ascii). With the option `UNICODE_WORD` we can transparently avoid this match.

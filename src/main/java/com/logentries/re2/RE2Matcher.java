@@ -16,7 +16,7 @@ public class RE2Matcher implements MatchResult, AutoCloseable, Iterable<MatchRes
         final int end
     );
 
-    static class Range {
+    public static class Range {
         int start, end;
         static Range of(int start, int end) {
             Range r = new Range();
@@ -35,13 +35,13 @@ public class RE2Matcher implements MatchResult, AutoCloseable, Iterable<MatchRes
     }
 
 
-    private ArrayList<Range> groups;
+    protected ArrayList<Range> groups;
     protected RE2String utf8input;
     protected RE2String managedString;
     protected long re2Pointer = 0;
     protected RE2 regex;
-    private boolean matched;
-    private boolean fetchGroups;
+    protected boolean matched;
+    protected boolean fetchGroups;
 
     RE2Matcher(RE2String input, RE2 regex, long re2Pointer, boolean fetchGroups) {
         this.utf8input = input;
@@ -57,7 +57,6 @@ public class RE2Matcher implements MatchResult, AutoCloseable, Iterable<MatchRes
     RE2Matcher(CharSequence input, RE2 regex, long re2Pointer, boolean fetchGroups) {
         this(new RE2String(input), regex, re2Pointer, fetchGroups);
         this.managedString = utf8input;
-
     }
     public void close() {
         if (managedString != null)

@@ -1,8 +1,4 @@
-package com.logentries.re2_test;
-
-import com.logentries.re2.RE2;
-import com.logentries.re2.Options;
-import com.logentries.re2.RegExprException;
+package com.logentries.re2;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;

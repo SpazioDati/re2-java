@@ -10,21 +10,24 @@ package com.logentries.re2;
 import com.logentries.re2.entity.CaptureGroup;
 import com.logentries.re2.entity.NamedGroup;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.regex.MatchResult;
 
 public final class RE2 extends LibraryLoader implements AutoCloseable {
+
     private static native long compileImpl(final String pattern, final Options options) throws RegExprException;
     private static native void releaseImpl(final long pointer);
     private static native boolean fullMatchImpl(final String str, final long pointer, Object ... args);
     private static native boolean partialMatchImpl(final String str, final long pointer, Object ... args);
     private static native boolean fullMatchImpl(final String str, final String pattern, Object ... args);
     private static native boolean partialMatchImpl(final String str, final String pattern, Object ... args);
-    private static native List<String> getCaptureGroupNamesImpl(final long pointer, Object ... args);
+    private static native HashMap<Integer, String> getCaptureGroupNamesImpl(final long pointer);
     private static native int numberOfCapturingGroupsImpl(final long pointer);
 
+
     private long pointer;
+    private boolean changedGroups = false;
+    //private Map<Integer, Integer> originalGroupMap = null;
 
     private void checkState() throws IllegalStateException {
         if (pointer == 0) {
@@ -35,14 +38,102 @@ public final class RE2 extends LibraryLoader implements AutoCloseable {
         return pointer == 0;
     }
 
-    public RE2(final String pattern, final Options options) throws RegExprException {
+    public RE2(String pattern, final Options options) throws RegExprException {
+        if (options.isUnicodeWord()) pattern = patchUnicodeWord(pattern);
         pointer = compileImpl(pattern, options);
+        //if (changedGroups) mapPatchedGroups();
     }
-    public RE2(final String pattern, final Options.Flag... options) throws RegExprException {
+    public RE2(String pattern, final Options.Flag... options) throws RegExprException {
         Options opt = new Options();
         for (Options.Flag f : options) f.apply(opt);
+        if (opt.isUnicodeWord()) pattern = patchUnicodeWord(pattern);
         pointer = compileImpl(pattern, opt);
+        //if (changedGroups) mapPatchedGroups();
+
     }
+
+    ////////////////////////////////////////////////////////////////////////////////////
+    /* Unicode word patch */
+    static final int IDLE = 0, QUOTING = 2;
+    static final String WORD_BOUNDARY_GNAME = "_ignore_";
+    static final String BOUNDARY_REPLACE = boundaryReplace(new String[]{"\\z", "\\A", "[^\\pL\\pN]"});
+    static final String WORD_REPLACE = "[\\pL\\pN]";
+    static final String NON_WORD_REPLACE = "[^\\pL\\pN]";
+
+    static String boundaryReplace ( String[] args ) {
+        String output = "(?P<" + WORD_BOUNDARY_GNAME + ">";
+
+        for ( String s : args )
+            output += "(?P<" + WORD_BOUNDARY_GNAME + ">" + s + ")" + "|";
+
+        return output.subSequence(0, output.length() - 1) + ")";
+    }
+
+    String patchUnicodeWord(String original) {
+        StringBuilder buffer = new StringBuilder(original.length());
+        int state = IDLE;
+        int wordBoundaryCount = 0;
+        for (int i=0; i<original.length(); i++) {
+            char c = original.charAt(i);
+            char next = 0;
+            if (i<original.length()-1) next = original.charAt(i+1);
+            switch (state) {
+                case IDLE:
+                    if (c == '\\' && next > 0) {
+                        if ( next == 'Q') {
+                            buffer.append("\\Q");
+                            state = QUOTING;
+                        } else if ( next == 'w') {
+                            buffer.append(WORD_REPLACE);
+                        } else if ( next == 'W') {
+                            buffer.append(NON_WORD_REPLACE);
+                        } else if ( next == 'b') {
+                            buffer.append(BOUNDARY_REPLACE);
+                            //wordBoundaryCount += 4;
+                            changedGroups = true;
+                        } else {
+                            buffer.append(c).append(next);
+                        }
+                        i++;
+                    } else {
+                        buffer.append(c);
+                    }
+                    break;
+                case QUOTING:
+                    if (c == '\\' && next == 'E') {
+                        state = IDLE;
+                        buffer.append("\\E");
+                        i++;
+                    } else
+                        buffer.append(c);
+                    break;
+            }
+        }
+
+        //System.out.println(buffer.toString());
+        return buffer.toString();
+    }
+
+    Set<Integer> getIgnoreGropus ( ) {
+        HashMap<Integer, String> groups = getCaptureGroupNameMap();
+        int total = numberOfCapturingGroups();
+        int offset = 0;
+        int originalgroup = 1;
+
+        Set<Integer> output = new HashSet<>();
+
+        for (int i = 1; i<total; i++){
+            if (groups.containsKey(i) && groups.get(i).startsWith(WORD_BOUNDARY_GNAME))
+                output.add(i);
+        }
+
+        return output;
+    }
+
+
+    ////////////////////////////////////////////////////////////////////////////////////
+
+
 
     public static RE2 compile(final String pattern, final Options.Flag... options) {
         try {
@@ -55,6 +146,11 @@ public final class RE2 extends LibraryLoader implements AutoCloseable {
     public int numberOfCapturingGroups() {
         checkState();
         return numberOfCapturingGroupsImpl(pointer);
+    }
+
+    public HashMap<Integer, String> getCaptureGroupNameMap(){
+        checkState();
+        return getCaptureGroupNamesImpl(pointer);
     }
 
     public void dispoze() {
@@ -133,22 +229,30 @@ public final class RE2 extends LibraryLoader implements AutoCloseable {
     public List<String> getCaptureGroupNames(Object... args) throws IllegalStateException {
         checkState();
         checkArgs(args);
-        return getCaptureGroupNamesImpl(pointer, args);
+        HashMap<Integer, String> nameMap = getCaptureGroupNamesImpl(pointer);
+        return new ArrayList<>(nameMap.values());
     }
+
 
     public RE2Matcher matcher(final CharSequence str) {
         return matcher(str, true);
     }
     public RE2Matcher matcher(final CharSequence str, boolean fetchGroups) {
         checkState();
-        return new RE2Matcher(str, this, pointer, fetchGroups);
+        if (changedGroups)
+            return new RE2MatcherUnicodeWord(str, this, pointer);
+        else
+            return new RE2Matcher(str, this, pointer, fetchGroups);
     }
     public RE2Matcher matcher(final RE2String str) {
         return matcher(str, true);
     }
     public RE2Matcher matcher(final RE2String str, boolean fetchGroups) {
         checkState();
-        return new RE2Matcher(str, this, pointer, fetchGroups);
+        if (changedGroups)
+            return new RE2MatcherUnicodeWord(str, this, pointer);
+        else
+            return new RE2Matcher(str, this, pointer, fetchGroups);
     }
 
     /**
