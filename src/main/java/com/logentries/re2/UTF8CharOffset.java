@@ -5,13 +5,14 @@ import java.nio.charset.StandardCharsets;
 public class UTF8CharOffset {
 
     static float AVG_BYTE_PER_CHAR = StandardCharsets.UTF_8.newEncoder().averageBytesPerChar();
+    static float MIN_INIT_DIMENSION = 8;
 
     private int[] byte2char;
     private int byteSize;
     private int[] char2byte;
     private int charSize;
     public UTF8CharOffset(CharSequence input) {
-        this(input, (int)(input.length() * AVG_BYTE_PER_CHAR));
+        this(input, (int)Math.max((int)(input.length() * AVG_BYTE_PER_CHAR),MIN_INIT_DIMENSION));
     }
     public UTF8CharOffset(CharSequence input, int utf8Len) {
         char2byte = new int[input.length()];
@@ -36,7 +37,7 @@ public class UTF8CharOffset {
             char2byte[i] = byteSize;
 
             if (byte2char.length - byteSize < slop) {
-                int [] newbie = new int[Math.max(byte2char.length * 2, slop)]; //if slop=3 and length=1 ... e.g. "€"
+                int [] newbie = new int[Math.max(byte2char.length * 2, byte2char.length+slop)]; //if slop=3 and length=1 ... e.g. "€"
                 System.arraycopy(byte2char,0,newbie,0, byteSize);
                 byte2char = newbie;
             }
