@@ -2,6 +2,6 @@
 *.iml
 .idea
 obj/
-/re2*
+/re2/**
 target/
 src/main/resources
